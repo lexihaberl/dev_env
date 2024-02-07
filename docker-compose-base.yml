@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  dev_env:
+    image: dev_env_base:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.environment
+      args:
+        USER_ID: ${DOCKER_UID:-1000}
+        GROUP_ID: ${DOCKER_GID:-1000}
+        GIT_USER_NAME: Alexander Haberl
+        GIT_USER_EMAIL: alexander.e360.haberl@tuwien.ac.at

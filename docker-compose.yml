@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  dev_env:
+    tty: true
+    stdin_open: true
+    image: dev_env:latest
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native
+    build:
+      context: .
+      dockerfile: Dockerfile.dotfiles
+      args:
+        USER_ID: ${DOCKER_UID:-1000}
+        GROUP_ID: ${DOCKER_GID:-1000}
+        GIT_USER_NAME: Alexander Haberl
+        GIT_USER_EMAIL: alexander.e360.haberl@tuwien.ac.at
+    volumes:
+      - ./app/:/home/user/app
+      # Grant display access to X Server.
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      # Grant audio access to PulseAudio.
+      - ${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native

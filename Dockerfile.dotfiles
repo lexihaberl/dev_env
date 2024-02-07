@@ -1,0 +1,61 @@
+FROM dev_env_base:latest
+
+USER root
+
+# Install fd-find, neovim, tmux and fish
+RUN  add-apt-repository ppa:fish-shell/release-3 &&\
+  add-apt-repository  ppa:neovim-ppa/stable && \
+  apt-get update && \
+  apt-get -qq -y upgrade && \
+  DEBIAN_FRONTEND=noninteractive TZ=America/Toronto apt-get -qq -y install \
+  fd-find neovim tmux fish rsync
+
+# Install bat
+ENV BAT_VER 0.24.0
+RUN curl -fLO https://github.com/sharkdp/bat/releases/download/v${BAT_VER}/bat_${BAT_VER}_amd64.deb && \
+  dpkg -i ./bat_${BAT_VER}_amd64.deb && \
+  rm ./bat_${BAT_VER}_amd64.deb
+
+# Install Ripgrep
+RUN apt-get -qq download ripgrep && \
+  dpkg --force-overwrite -i ripgrep*.deb
+ 
+# Replace fd with fd-find
+RUN ln -s /usr/bin/fdfind /usr/bin/fd
+
+# Install eza
+ENV EZA_VER 0.18.0
+RUN mkdir -p /usr/local/bin && \
+  cd /usr/local/bin && \
+  curl -fLO https://github.com/eza-community/eza/releases/download/v${EZA_VER}/eza_x86_64-unknown-linux-gnu.zip && \
+  unzip eza_x86_64-unknown-linux-gnu.zip && \
+  rm eza_x86_64-unknown-linux-gnu.zip && \
+  cd -
+
+# Install lazygit for neovim
+RUN LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*') && \
+  curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" && \
+  tar xf lazygit.tar.gz lazygit && \
+  install lazygit /usr/local/bin
+
+RUN chsh -s /usr/bin/fish user
+
+USER user
+WORKDIR "$HOME"
+
+# Install lazyvim
+RUN git clone https://github.com/LazyVim/starter ~/.config/nvim && \
+  rm -rf ~/.config/nvim/.git
+
+# Copy dotfiles
+RUN git clone https://github.com/lexihaberl/dotfiles && \
+  rsync -a dotfiles/* .config
+
+# Install oh-my-fish
+RUN curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install > install && \
+  fish install --path=~/.local/share/omf --config=~/.config/omf --noninteractive  --yes
+
+# build bat cache now that .config/bat/config is installed
+RUN bat cache --build
+
+WORKDIR "$HOME/app"

@@ -1,0 +1,41 @@
+FROM ubuntu:22.04
+ 
+ARG USER_ID
+ARG GROUP_ID
+ARG GIT_USER_NAME
+ARG GIT_USER_EMAIL
+ 
+ENV TERM xterm
+ 
+RUN apt-get update && \
+  apt-get -qq -y install software-properties-common && \
+  add-apt-repository universe && \
+  apt-get update && \
+  apt-get -qq -y upgrade && \
+  DEBIAN_FRONTEND=noninteractive TZ=America/Toronto apt-get -qq -y install \
+  locales curl wget git zip tzdata \
+  python3 python3-pip build-essential
+ 
+# Set the locale
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+ 
+# set up user and environment
+RUN addgroup --gid $GROUP_ID user && \
+  adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
+ 
+USER user
+ 
+ENV HOME /home/user
+ 
+WORKDIR "$HOME"
+ 
+# set git config options for user
+RUN if [ ! -z "$GIT_USER_NAME" ] && [ ! -z "$GIT_USER_EMAIL" ]; then \
+    git config --global user.name "$GIT_USER_NAME"; \
+    git config --global user.email "$GIT_USER_EMAIL"; \
+  fi
+ 
+WORKDIR "$HOME/app"
