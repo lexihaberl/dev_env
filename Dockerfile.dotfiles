@@ -4,7 +4,7 @@ USER root
 
 # Install fd-find, neovim, tmux and fish
 RUN  add-apt-repository ppa:fish-shell/release-3 &&\
-  add-apt-repository  ppa:neovim-ppa/stable && \
+  add-apt-repository  ppa:neovim-ppa/unstable && \
   apt-get update && \
   apt-get -qq -y upgrade && \
   DEBIAN_FRONTEND=noninteractive TZ=America/Toronto apt-get -qq -y install \
@@ -19,7 +19,7 @@ RUN curl -fLO https://github.com/sharkdp/bat/releases/download/v${BAT_VER}/bat_$
 # Install Ripgrep
 RUN apt-get -qq download ripgrep && \
   dpkg --force-overwrite -i ripgrep*.deb
- 
+
 # Replace fd with fd-find
 RUN ln -s /usr/bin/fdfind /usr/bin/fd
 
